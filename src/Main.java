@@ -1,16 +1,15 @@
-import java.lang.reflect.InvocationTargetException;
-import java.sql.Connection;
-import java.sql.DriverManager;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.*;
-import java.nio.file.*;
-import java.io.*;
-import java.util.*;
+import java.util.Properties;
 
 public class Main {
     public static void main(String[] args) {
-        try{
+        try {
             Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
-            try (Connection conn = getConnection()){
+            try (Connection conn = getConnection()) {
 
                 System.out.println("Connection to lesson2 DB succesfull!");
                 Statement statement = conn.createStatement();
@@ -38,16 +37,17 @@ public class Main {
 
                 // Получить результат выборки
                 sqlCommand = "SELECT idSales, product, price, quantity, price*quantity as sum," +
-                                " CASE"  +
-                                "   WHEN price*quantity < 100 THEN '1. < 100'" +
-                                "   WHEN price*quantity BETWEEN 100 and 300 THEN '2. 100-300'" +
-                                "   WHEN price*quantity > 300 THEN '3. > 300'" +
-                                " END AS qv" +
-                                " FROM sales" +
-                                " ORDER BY qv;";
+                        " CASE" +
+                        "   WHEN price*quantity < 100 THEN '1. < 100'" +
+                        "   WHEN price*quantity BETWEEN 100 and 300 THEN '2. 100-300'" +
+                        "   WHEN price*quantity > 300 THEN '3. > 300'" +
+                        " END AS qv" +
+                        " FROM sales" +
+                        " ORDER BY qv;";
                 ResultSet resultSet = statement.executeQuery(sqlCommand);
-                System.out.printf("\nId\tТовар\t\t\tСтоимость(т.р.)\t\tДиапазон\n" );
-                while(resultSet.next()) {
+                //Вывод результатов выборки
+                System.out.printf("\nId\tТовар\t\t\tСтоимость(т.р.)\t\tДиапазон\n");
+                while (resultSet.next()) {
                     int idSales = resultSet.getInt("idSales");
                     String product = resultSet.getString("product");
                     Double price = resultSet.getDouble("price");
@@ -57,17 +57,16 @@ public class Main {
                     System.out.printf("%d. %-10s \t %.2f*%.2f=%.2f \t %s\n", idSales, product, price, quantity, sum, qv);
                 }
             }
-        }
-        catch(Exception ex){
+        } catch (Exception ex) {
             System.out.println("Connection failed...");
             System.out.println(ex);
         }
     }
 
-    public static Connection getConnection() throws SQLException, IOException{
+    public static Connection getConnection() throws SQLException, IOException {
 
         Properties props = new Properties();
-        try(InputStream in = Files.newInputStream(Paths.get("database.properties"))){
+        try (InputStream in = Files.newInputStream(Paths.get("database.properties"))) {
             props.load(in);
         }
         String url = props.getProperty("url");
